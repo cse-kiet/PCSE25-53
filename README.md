@@ -1,18 +1,11 @@
 # PCSE25-53
 # Padharo Sa: Tourism Itinerary Generation Based on Image Similarity
 
-**Project Report submitted as partial fulfillment for the award of BACHELOR OF TECHNOLOGY DEGREE (Session 2024-25) in Computer Science and Engineering.**
+**Padharo Sa** is an innovative project that generates personalized tourism itineraries based on visual similarity. Users can upload an image representing their desired travel aesthetic, and the system will recommend tourist attractions that visually match the input, then build an optimized travel plan.
 
-By:
-*   Rovince Gangwar (2100290100139)
-*   Yash Goswami (2100290100195)
-*   Mohd. Uzair Khan (2100290100099)
+This project leverages advanced computer vision techniques (CLIP for image embeddings), efficient similarity search (FAISS), geospatial data integration (Google Maps API), and itinerary optimization (Google OR-Tools for VRPTW). The user interface is built with Streamlit for an interactive experience.
 
-Under the supervision of: Dr. Seema Maitrey
-KIET Group of Institutions, Ghaziabad
-Affiliated to Dr. A.P.J. Abdul Kalam Technical University, Lucknow
-
----
+This system was presented at the **ICETISD-2025 conference**, hosted by **Poornima University, Jaipur, India**.
 
 ## Table of Contents
 1.  [Project Overview](#project-overview)
@@ -20,108 +13,87 @@ Affiliated to Dr. A.P.J. Abdul Kalam Technical University, Lucknow
 3.  [System Architecture](#system-architecture)
 4.  [Repository Structure](#repository-structure)
 5.  [Setup and Installation](#setup-and-installation)
-6.  [Running the Project](#running-the-project)
-    *   [Step 1: Embedding Generation (One-time setup)](#step-1-embedding-generation-one-time-setup)
-    *   [Step 2: Running the Main Application](#step-2-running-the-main-application)
-7.  [Key Technologies Used](#key-technologies-used)
-8.  [Project Documents](#project-documents)
+    *   [Prerequisites](#prerequisites)
+    *   [Configuration](#configuration)
+    *   [Generating Embeddings](#generating-embeddings)
+    *   [Running the Application](#running-the-application)
+6.  [Project Documents](#project-documents)
+7.  [Dependencies](#dependencies)
+8.  [Future Work](#future-work)
 
----
+## Project Overview
 
-## 1. Project Overview
+Traditional travel planning often relies on textual searches and reviews. "Padharo Sa" offers a novel approach by allowing users to start their planning process with visual inspiration. The system analyzes an uploaded image, identifies its core visual characteristics, and then searches a database of tourist locations to find those with similar aesthetics. Once a primary location is chosen, the system helps build a multi-day itinerary, considering user preferences for attraction types, travel radius, and daily pace, and optimizes the routes and schedule.
 
-"Padharo Sa" is an innovative tourism itinerary generation system that leverages the power of visual similarity. Users can upload an image representing their desired travel aesthetic or a specific destination vibe. The system then uses advanced computer vision (CLIP model) and similarity search techniques (FAISS) to identify visually similar tourist attractions from a database. 
+## Features
 
-Once a primary location is identified and selected, the system integrates with the Google Maps API to gather details about nearby attractions and optimize a multi-day itinerary using Google OR-Tools (solving a Vehicle Routing Problem with Time Windows - VRPTW). The final itinerary is presented to the user via an interactive Streamlit web application, complete with a map visualization (Folium).
+*   **Image-based Destination Discovery:** Upload an image to find visually similar tourist locations.
+*   **Personalized Itinerary Generation:** Customize your trip based on travel dates, interests, and desired pace.
+*   **Optimized Daily Routes:** Utilizes Google OR-Tools to solve the Vehicle Routing Problem with Time Windows (VRPTW), ensuring efficient and feasible daily plans.
+*   **Interactive Map Visualization:** View your generated itinerary on an interactive map powered by Folium.
+*   **Geospatial Information:** Integrates Google Maps API for location details, opening hours, ratings, and travel times.
+*   **User-Friendly Interface:** Built with Streamlit for easy interaction.
 
-The project aims to bridge the gap between visual inspiration and practical travel planning, offering a more intuitive and personalized way to discover and plan trips.
+## System Architecture
 
----
+1.  **Image Input:** User uploads an inspirational image.
+2.  **Embedding Generation (Query):** The uploaded image is processed by the CLIP model to generate a high-dimensional vector embedding.
+3.  **Similarity Search:** This embedding is compared against a pre-computed FAISS index of aggregated embeddings for various tourist locations.
+4.  **Location Recommendation:** The system suggests top visually similar locations.
+5.  **User Customization:** User selects a primary location and provides travel preferences (dates, interests, radius, hotel).
+6.  **Data Enrichment:** Google Maps API is used to fetch details (geocodes, opening hours, ratings, travel times) for the selected and nearby relevant locations.
+7.  **Itinerary Optimization:** Google OR-Tools solves a VRPTW to create an optimized daily schedule.
+8.  **Output:** The user receives a detailed itinerary and an interactive map.
 
-## 2. Features
-
-*   **Image-Based Destination Discovery:** Upload an image to find visually similar tourist locations.
-*   **Personalized Itinerary Parameters:** Customize travel dates, types of attractions, search radius, and daily travel pace.
-*   **Nearby Attraction Discovery:** Utilizes Google Maps API to find relevant points of interest around a selected primary location.
-*   **Optimized Itinerary Generation:** Employs Google OR-Tools to create efficient multi-day itineraries considering travel times, opening hours, and meal breaks.
-*   **Interactive User Interface:** Built with Streamlit for easy image upload, preference setting, and itinerary viewing.
-*   **Map Visualization:** Displays the generated itinerary on an interactive Folium map.
-
----
-
-## 3. System Architecture
-
-The system follows a multi-stage pipeline:
-
-1.  **Image Input & Preprocessing:** User uploads an image. (Optional: Homographic warping for image refinement).
-2.  **Embedding Generation (Query):** The input image is processed by the CLIP model to generate a high-dimensional embedding vector.
-3.  **Similarity Search:** The query embedding is compared against a precomputed FAISS index of location embeddings (centroids) using cosine similarity.
-4.  **Location Selection & Customization:** User selects a primary destination from the visual matches and provides travel preferences.
-5.  **Data Enrichment & Nearby POI Discovery:** Google Maps API is used to geocode locations, fetch details (ratings, opening hours), and find nearby relevant attractions.
-6.  **Itinerary Optimization (VRPTW):** Google OR-Tools solves the Vehicle Routing Problem with Time Windows to create daily schedules, considering travel times, service durations, and constraints.
-7.  **Output Presentation:** The final itinerary is displayed in the Streamlit app with an interactive Folium map.
-
----
-
-## 4. Repository Structure
+## Repository Structure
 
 ```
 .
+├── .gitignore
 ├── aggregation_search/
-│   ├── embedding_gen.py            # Script to generate embeddings and FAISS index for location images
-│   ├── final_app.py                # Main Streamlit application script
-│   ├── requirements.txt            # Python dependencies
-│   ├── aggregated_clip.index       # (Generated) FAISS index for location embeddings
-│   ├── place_mapping.json          # (Generated) Maps place names to representative image paths
-│   └── places_order.json           # (Generated) Ordered list of place names for FAISS index mapping
-│
-├── ICETISD-2025/                   # Directory for conference paper
-│   └── [Research Paper Document Name].pdf # Example: ICETISD_Paper_PadharoSa.pdf (Actual name may vary)
-│
-├── final_project_report/
-│   └── [Project Report Document Name].pdf # Example: BTech_Project_Report_PadharoSa.pdf (Actual name may vary)
-│
-├── Presentation certificate Rovince Gangwar/
-│   └── [Certificate File Name].pdf   # Example: Certificate_Rovince_Gangwar_ICETISD.pdf (Actual name may vary)
-│
-├── Tourism_Itinerary_Generation.pptx # Conference presentation slides
-│
+│   ├── .streamlit/
+│   │   ├── config.toml         # Streamlit theme configuration (set to light)
+│   │   └── secrets.toml        # (To be created by user) Google Maps API key
+│   ├── embedding_gen.py        # Script to generate FAISS index and mappings from images
+│   ├── final_app.py            # Main Streamlit application script
+│   ├── requirements.txt        # Python dependencies
+│   ├── aggregated_clip.index   # (Generated by embedding_gen.py) FAISS index
+│   ├── place_mapping.json      # (Generated by embedding_gen.py) Maps place names to representative images
+│   └── places_order.json       # (Generated by embedding_gen.py) Ordered list of places for FAISS index
+├── conference_documents/
+│   ├── About_the_conference.pdf    # Link to the conference website
+│   ├── ICETISD-2025.pdf            # Research paper PDF
+│   ├── Presentation certificate Rovince Gangwar.pdf # Conference presentation certificate
+│   └── Tourism_Itinerary_Generation.pptx # Conference presentation slides
+├── final_project_report.pdf    # Detailed project report
 ├── places_images/
-│   └── 50 most famous places in the world.zip/ # Zipped directory containing images
-│       ├── [Place Name 1]/
-│       │   ├── image1.jpg
-│       │   └── ...
-│       ├── [Place Name 2]/
-│       │   ├── image1.jpg
-│       │   └── ...
-│       └── ... (directories for all 50 places)
-│   └── Pseudo marking/                   # Directory containing unused .csv marking files
-│       ├── file1.csv
-│       └── ...
-│
-└── README.md                           # This file
+│   ├── 50 most famous places in the world.zip/ # Contains images of places (does not need to be unzipped by the script)
+│   └── Pseudo marking/         # Contains CSV files (not used in this project version)
+└── README.md
 ```
+**Note:** `aggregated_clip.index`, `place_mapping.json`, and `places_order.json` are generated by `embedding_gen.py` and are not included directly in the repository to keep it lightweight. The `secrets.toml` file needs to be created by the user.
 
-**Note on Generated Files:**
-The files `aggregated_clip.index`, `place_mapping.json`, and `places_order.json` inside the `aggregation_search/` directory are generated by the `embedding_gen.py` script. They are essential for the `final_app.py` to run. If you are cloning this repository, these files might be included if they were committed. If not, you will need to run `embedding_gen.py` first.
+## Setup and Installation
 
----
+### Prerequisites
 
-## 5. Setup and Installation
+*   Python 3.8+
+*   `pip` (Python package installer)
+*   Git (for cloning the repository)
+
+### Configuration
 
 1.  **Clone the Repository:**
     ```bash
-    git clone https://github.com/your-username/padharo-sa.git # Replace with your actual repo URL
-    cd padharo-sa
+    git clone https://github.com/cse-kiet/PCSE25-53.git
+    cd PCSE25-53
     ```
 
-2.  **Set up a Python Virtual Environment (Recommended):**
+2.  **Set up Python Environment (Recommended):**
+    It's good practice to use a virtual environment.
     ```bash
     python -m venv venv
-    # On Windows
-    .\venv\Scripts\activate
-    # On macOS/Linux
-    source venv/bin/activate
+    source venv/bin/activate  # On Windows: venv\Scripts\activate
     ```
 
 3.  **Install Dependencies:**
@@ -130,98 +102,89 @@ The files `aggregated_clip.index`, `place_mapping.json`, and `places_order.json`
     cd aggregation_search
     pip install -r requirements.txt
     ```
-    **Note:** `requirements.txt` should include libraries like `torch`, `transformers`, `faiss-cpu` (or `faiss-gpu` if you have a compatible GPU and CUDA setup), `streamlit`, `folium`, `numpy`, `Pillow`, `googlemaps`, `ortools`, etc.
 
-4.  **Prepare Image Dataset:**
-    *   Navigate to the `places_images/` directory from the root of the project.
-    *   Unzip the `50 most famous places in the world.zip` file.
-    *   This should create a directory structure like `places_images/50 most famous places in the world/[Place Name]/image.jpg`.
-    *   The `embedding_gen.py` script expects the images to be organized in subdirectories where each subdirectory's name is the name of the tourist place.
-        *   **IMPORTANT:** The `embedding_gen.py` script in its current form (as per the provided code) uses `base_folder = os.path.join("..", "places_images")`. This means it expects the `places_images` directory to be one level *above* the `aggregation_search` directory (i.e., in the project root). Ensure your `places_images` folder containing the unzipped place image directories is at the root level of your project. If you unzipped it to `places_images/50 most famous places in the world/`, you might need to adjust the `base_folder` path in `embedding_gen.py` to point correctly to the directories containing the actual images (e.g., `os.path.join("..", "places_images", "50 most famous places in the world")`).
+4.  **Google Maps API Key:**
+    You need a Google Maps API key with the following APIs enabled:
+    *   Maps JavaScript API (for Folium, if embedding dynamic maps)
+    *   Geocoding API
+    *   Places API
+    *   Directions API
 
-5.  **Google Maps API Key:**
-    *   The `final_app.py` script will require a Google Maps API key for geocoding, finding nearby places, and potentially for fetching travel times.
-    *   You will need to obtain an API key from the Google Cloud Platform Console. Make sure to enable the following APIs for your key:
-        *   Geocoding API
-        *   Places API
-        *   Directions API (if used for travel times)
-    *   You'll need to securely manage this API key. The application might expect it as an environment variable or a configuration file (this detail should be in `final_app.py`'s implementation). For example, you might need to set an environment variable:
-        ```bash
-        # On Linux/macOS
-        export GOOGLE_MAPS_API_KEY="YOUR_API_KEY"
-        # On Windows (PowerShell)
-        $env:GOOGLE_MAPS_API_KEY="YOUR_API_KEY"
-        ```
-        Or modify `final_app.py` to read it from a config file. **Do not commit your API key directly into the code.**
+    Create a file named `secrets.toml` inside the `aggregation_search/.streamlit/` directory with your API key:
+    ```toml
+    # aggregation_search/.streamlit/secrets.toml
+    GOOGLE_MAPS_API_KEY="YOUR_ACTUAL_GOOGLE_MAPS_API_KEY"
+    ```
+    Replace `YOUR_ACTUAL_GOOGLE_MAPS_API_KEY` with your valid key.
 
----
+5.  **Image Data:**
+    The `embedding_gen.py` script expects the image data to be in the `../places_images/50 most famous places in the world.zip/` directory relative to its location.
+    *   Ensure the `places_images` directory is present at the root of the cloned repository.
+    *   The `50 most famous places in the world.zip` directory within `places_images` should contain subdirectories, each named after a tourist place, and these subdirectories should contain the respective images (e.g., `.jpg`, `.png`). The `embedding_gen.py` script is written to handle the `.zip` in the directory name and traverse it.
 
-## 6. Running the Project
+### Generating Embeddings
 
-### Step 1: Embedding Generation (One-time setup)
+Before running the main application, you need to generate the FAISS index and mapping files from the tourist location images.
 
-This step processes all the images in your `places_images` dataset, generates CLIP embeddings for them, aggregates them per location, and creates the FAISS index and mapping files. **You only need to run this once**, or whenever your image dataset changes.
-
-1.  Ensure you are in the `aggregation_search/` directory in your terminal.
+1.  Navigate to the `aggregation_search` directory if you aren't already there.
+    ```bash
+    cd aggregation_search # If you are in the root directory
+    ```
 2.  Run the `embedding_gen.py` script:
     ```bash
     python embedding_gen.py
     ```
-3.  This script will:
-    *   Scan the image dataset (path configured within the script, likely `../places_images/`).
-    *   Generate embeddings for all images (this can take a while depending on the number of images and your hardware).
-    *   Create `aggregated_clip.index` (the FAISS index).
-    *   Create `place_mapping.json` (maps places to representative images).
-    *   Create `places_order.json` (ordered list of places for the index).
+    This script will:
+    *   Process images from `../places_images/50 most famous places in the world.zip/`.
+    *   Generate CLIP embeddings for each image.
+    *   Aggregate embeddings for each location (centroid method).
+    *   Create and save `aggregated_clip.index` (FAISS index), `place_mapping.json`, and `places_order.json` in the `aggregation_search` directory.
+    This process might take some time depending on the number of images and your hardware (GPU recommended for speed).
 
-    These three files will be saved in the `aggregation_search/` directory.
+### Running the Application
 
-### Step 2: Running the Main Application
+Once the embeddings are generated and the configuration is complete:
 
-Once the embeddings and index are generated (or if they are already present), you can run the Streamlit web application.
-
-1.  Ensure you are in the `aggregation_search/` directory.
-2.  Make sure your Google Maps API key is correctly set up (see Setup section).
-3.  Run the `final_app.py` script using Streamlit:
+1.  Ensure you are in the `aggregation_search` directory.
+2.  Run the Streamlit application:
     ```bash
     streamlit run final_app.py
     ```
-4.  This will start a local web server, and your default web browser should open automatically to the application's URL (usually `http://localhost:8501`).
-5.  You can now interact with the application:
-    *   Upload an image.
-    *   View visually similar locations.
-    *   Select a primary location and customize itinerary preferences.
-    *   Generate and view the optimized itinerary with an interactive map.
+3.  Open your web browser and navigate to the local URL provided by Streamlit (usually `http://localhost:8501`).
+4.  You can now upload an image and interact with the "Padharo Sa" itinerary generator.
 
----
+## Project Documents
 
-## 7. Key Technologies Used
+The repository contains several key documents detailing the project:
 
-*   **Python:** Core programming language.
-*   **Streamlit:** For building the interactive web application UI.
-*   **Hugging Face Transformers:** For accessing the pre-trained CLIP model.
-*   **PyTorch:** Deep learning framework used by the CLIP model.
-*   **FAISS (Facebook AI Similarity Search):** For efficient similarity search of high-dimensional embeddings.
-*   **NumPy:** For numerical operations, especially with embeddings.
-*   **Pillow (PIL):** For image processing.
-*   **Google OR-Tools:** For solving the Vehicle Routing Problem with Time Windows (VRPTW) to optimize itineraries.
-*   **Google Maps API:** For geocoding, fetching place details (ratings, opening hours), finding nearby places, and route information.
-*   **Folium:** For creating interactive map visualizations.
-*   **JSON:** For storing mapping data.
+*   `final_project_report.pdf`: The comprehensive final report for this project, detailing the methodology, implementation, results, and future scope.
+*   `conference_documents/ICETISD-2025.pdf`: The research paper submitted and presented at the ICETISD-2025 conference.
+*   `conference_documents/Tourism_Itinerary_Generation.pptx`: The presentation slides used for the conference.
+*   `conference_documents/Presentation certificate Rovince Gangwar.pdf`: Certificate of presentation from the conference.
 
----
+These documents provide in-depth information about the research, development, and outcomes of the "Padharo Sa" project.
 
-## 8. Project Documents
+## Dependencies
 
-This repository also contains important documentation related to the project:
+Key Python libraries used:
+*   `torch` & `transformers`: For loading and using the CLIP model.
+*   `faiss-cpu` (or `faiss-gpu`): For efficient similarity search.
+*   `streamlit`: For building the interactive web application.
+*   `Pillow (PIL)`: For image processing.
+*   `numpy`: For numerical operations.
+*   `pandas`: For data handling (potentially by OR-Tools or data preparation).
+*   `ortools`: For solving the Vehicle Routing Problem with Time Windows.
+*   `googlemaps`: Python client for Google Maps API services.
+*   `folium` & `streamlit-folium`: For displaying interactive maps.
+*   `requests`: For making HTTP requests (potentially by Google Maps client).
 
-*   **`final_project_report/`**: Contains the detailed B.Tech project report (`[Project Report Document Name].pdf`). This document provides an in-depth explanation of the project's background, methodology, implementation, results, and conclusions.
-*   **`ICETISD-2025/`**: Contains the research paper (`[Research Paper Document Name].pdf`) submitted/presented at the ICETISD-2025 conference.
-*   **`Presentation certificate Rovince Gangwar/`**: Contains the certificate (`[Certificate File Name].pdf`) received for the conference presentation.
-*   **`Tourism_Itinerary_Generation.pptx`**: The PowerPoint presentation slides used for the conference or project defense.
+All dependencies are listed in `aggregation_search/requirements.txt`.
 
-These documents provide comprehensive insights into the academic and research aspects of the "Padharo Sa" project.
+## Future Work
 
----
-
-For any issues or contributions, please open an issue or a pull request in this repository.
+*   **Dataset Expansion:** Significantly increase the number and diversity of tourist locations in the database.
+*   **Real-Time Adaptation:** Integrate dynamic data like traffic, weather, and crowd levels.
+*   **Multimodal Features:** Combine visual embeddings with textual and structured data for richer understanding.
+*   **User Feedback Loop:** Implement mechanisms for continuous learning and personalization based on user interactions.
+*   **Enhanced UI/UX:** Further improvements to the user interface for even smoother interactions.
+*   **Mobile Application:** Potential development of a mobile version for in-trip assistance.
