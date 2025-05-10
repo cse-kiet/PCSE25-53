@@ -1,6 +1,10 @@
 import os
 os.environ["KMP_DUPLICATE_LIB_OK"]="TRUE"
 
+import cv2
+import numpy as np
+from streamlit_image_coordinates import streamlit_image_coordinates
+
 import datetime
 import time
 import streamlit as st
@@ -306,18 +310,20 @@ def solve_prize_collecting_vrptw(data, penalties):
 # ----------------------------
 # Image Search Function
 # ----------------------------
-def search_places(query_files, top_k=5):
+def search_places(query_files, processed_images=None, top_k=5):
     query_embeddings = []
+    if processed_images is None:
+        processed_images = [Image.open(file) for file in query_files]
+    
     with torch.inference_mode():
-        for file in query_files:
+        for img in processed_images:
             try:
-                image = Image.open(file).convert("RGB")
-                inputs = processor_clip(images=image, return_tensors="pt").to(device)
+                inputs = processor_clip(images=img, return_tensors="pt").to(device)
                 embedding = model_clip.get_image_features(**inputs)
                 embedding = torch.nn.functional.normalize(embedding, p=2, dim=1)
                 query_embeddings.append(embedding.cpu().numpy())
             except Exception as e:
-                st.error(f"Error processing {file.name}: {e}")
+                st.error(f"Error processing image: {e}")
                 query_embeddings.append(np.zeros((1, 512), dtype=np.float32))
     query_embeddings = np.vstack(query_embeddings).astype(np.float32)
     distances, indices = index_place.search(query_embeddings, top_k)
@@ -452,6 +458,12 @@ def get_marker_style(place):
 # UI State Initialization
 # ----------------------------
 def initialize_session_state():
+
+    if 'image_points' not in st.session_state:
+        st.session_state.image_points = {}
+    if 'current_image' not in st.session_state:
+        st.session_state.current_image = None
+
     if 'selected_place' not in st.session_state:
         st.session_state.selected_place = None
     if 'search_results' not in st.session_state:
@@ -466,6 +478,21 @@ def initialize_session_state():
         st.session_state.daily_itineraries = None
 
 initialize_session_state()
+
+def resize_image(image, max_width=800, max_height=800):
+    width, height = image.size
+    aspect_ratio = width / height
+    
+    if width > max_width or height > max_height:
+        if width > height:
+            new_width = max_width
+            new_height = int(new_width / aspect_ratio)
+        else:
+            new_height = max_height
+            new_width = int(new_height * aspect_ratio)
+        return image.resize((new_width, new_height))
+    else:
+        return image
 
 # ----------------------------
 # Common Map Rendering Function (using folium.Icon)
@@ -490,10 +517,89 @@ def render_map(center, markers, polyline=None, width=1200, height=600):
 # ----------------------------
 def render_tab1():
     st.title("Image-based Place Search")
-    uploaded_files = st.sidebar.file_uploader("Upload travel photos", type=["jpg", "jpeg", "png"], accept_multiple_files=True)
+    uploaded_files = st.sidebar.file_uploader("Upload travel photos", 
+                                            type=["jpg", "jpeg", "png"], 
+                                            accept_multiple_files=True)
+    
+    # Homography controls
+    warp_enabled = st.checkbox("Enable Perspective Correction (Select 4 points)")
+    if warp_enabled and uploaded_files:
+        st.info("🔍 Click on images in order: Top-Left → Top-Right → Bottom-Right → Bottom-Left")
+        
+        # Create tabs for each image
+        tabs = st.tabs([f"Image {i+1}" for i in range(len(uploaded_files))])
+        
+        for i, (tab, file) in enumerate(zip(tabs, uploaded_files)):
+            with tab:
+                col1, col2 = tab.columns(2)
+                with col1:
+                    if file.name not in st.session_state.image_points:
+                        st.session_state.image_points[file.name] = []
+                    
+                    points = st.session_state.image_points[file.name]
+                    img = Image.open(file)
+                    
+                    img = resize_image(img, max_width=800, max_height=800)
+                    
+                    # Display image with click coordinates
+                    value = streamlit_image_coordinates(img, key=f"coord_{i}")
+                    
+                    if value is not None:
+                        x, y = value["x"], value["y"]
+                        if len(points) < 4 and (x, y) not in points:
+                            points.append((x, y))
+                            st.session_state.image_points[file.name] = points
+                            st.rerun()
+                    
+                    st.caption(f"Selected points: {len(points)}/4")
+                    
+                with col2:
+                    if len(points) == 4:
+                        try:
+                            # Perform homography warping preview
+                            src_pts = np.float32(points)
+                            width = abs(points[1][0] - points[0][0])
+                            height = abs(points[3][1] - points[0][1])
+                            dst_pts = np.float32([[0, 0], [width, 0], 
+                                                [width, height], [0, height]])
+                            
+                            matrix = cv2.getPerspectiveTransform(src_pts, dst_pts)
+                            img_warped = cv2.warpPerspective(np.array(img), matrix, 
+                                                           (int(width), int(height)))
+                            st.image(img_warped, caption="Warped Preview")
+                        except Exception as e:
+                            st.error(f"Error in warping: {str(e)}")
+
+    # Existing search functionality with warping
     if uploaded_files and st.button("Search Similar Places"):
         with st.spinner("Analyzing images..."):
-            results = search_places(uploaded_files)
+            processed_images = []
+            for file in uploaded_files:
+                try:
+                    img = Image.open(file)
+                    points = st.session_state.image_points.get(file.name, [])
+                    
+                    if len(points) == 4:
+                        # Apply homography transformation
+                        src_pts = np.float32(points)
+                        width = abs(points[1][0] - points[0][0])
+                        height = abs(points[3][1] - points[0][1])
+                        dst_pts = np.float32([[0, 0], [width, 0], 
+                                            [width, height], [0, height]])
+                        
+                        matrix = cv2.getPerspectiveTransform(src_pts, dst_pts)
+                        img_warped = cv2.warpPerspective(np.array(img), matrix, 
+                                                       (int(width), int(height)))
+                        processed_images.append(Image.fromarray(img_warped))
+                    else:
+                        processed_images.append(img)
+                
+                except Exception as e:
+                    st.error(f"Error processing {file.name}: {e}")
+                    processed_images.append(img)
+            
+            # Perform search with processed images
+            results = search_places(uploaded_files, processed_images)
             st.session_state.search_results = results
 
     if st.session_state.search_results:
