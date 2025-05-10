@@ -27,7 +27,7 @@ This project was developed as part of a Bachelor of Technology degree and was pr
 ## Project Structure
 
 ```
-.
+PCSE25-53/
 ├── aggregation_search/
 │   ├── .streamlit/
 │   │   ├── config.toml         # Streamlit theme configuration (set to light)
