@@ -1,0 +1,11 @@
+transformers
+torch
+torchvision
+torchaudio
+faiss-cpu
+numpy
+streamlit
+streamlit-folium
+ortools
+opencv-python-headless
+streamlit-image-coordinates
