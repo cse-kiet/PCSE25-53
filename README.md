@@ -43,7 +43,7 @@ PCSE25-53/
 │   ├── ICETISD-2025.pdf        # Research paper
 │   ├── Presentation certificate Rovince Gangwar.pdf
 │   └── Tourism_Itinerary_Generation.pptx
-├── final_project_report.pdf    # Detailed project report document
+├── project_report.pdf      # Detailed project report document
 ├── places_images/
 │   ├── 50 most famous places in the world.zip/  # Directory containing images for ~50 locations,
 │   │                                            # each in its own subdirectory.
@@ -156,7 +156,7 @@ Once the embeddings and index are generated, you can run the main application.
 
 The repository contains several supporting documents:
 
-*   **`final_project_report.pdf`**: The comprehensive final report detailing the project's methodology, implementation, results, and conclusions.
+*   **`project_report.pdf`**: The comprehensive final report detailing the project's methodology, implementation, results, and conclusions.
 *   **`conference_documents/`**: This directory contains materials related to the project's presentation at the ICETISD-2025 conference.
     *   `About_the_conference.pdf`: Information about the conference.
     *   `ICETISD-2025.pdf`: The research paper submitted and presented.
