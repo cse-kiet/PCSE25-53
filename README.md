@@ -44,6 +44,7 @@ PCSE25-53/
 │   │   ├── ICETISD-2025.pdf        # Research paper
 │   │   ├── Presentation certificate Rovince Gangwar.pdf
 │   │   └── Tourism_Itinerary_Generation.pptx
+│   ├── certificate_project_report.pdf      # Certificate signed by project guide
 │   ├── plag_report.pdf         # Plagiarism report for project report
 │   ├── project_report.pdf      # Project report
 │   └── synopsis.pdf            # Project synopsis
@@ -161,6 +162,7 @@ Once the embeddings and index are generated, you can run the main application.
 
 The repository contains several supporting documents, primarily located within the `PCSE25-53/documents/` directory:
 
+*   **`documents/certificate_project_report.pdf`**: The certificate signed by project guide.
 *   **`documents/project_report.pdf`**: The comprehensive final project report detailing the methodology, implementation, results, and conclusions of "Padharo Sa."
 *   **`documents/synopsis.pdf`**: A concise synopsis of the project.
 *   **`documents/plag_report.pdf`**: The plagiarism check report for the project report.
