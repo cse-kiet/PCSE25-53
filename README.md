@@ -4,6 +4,7 @@
 1. **Rovince Gangwar** (2100290100139 - CSE - 8C)
 2. **Yash Goswami** (2100290100195 - CSE - 8C)
 3. **Mohd. Uzair Khan** (2100290100099 - CSE - 8C)
+
 *Project Guide:* **Dr. Seema Maitrey** (Associate Professor, CSE)
 
 # Padharo Sa: Tourism Itinerary Generation Based on Image Similarity
