@@ -4,12 +4,15 @@ import time
 import math
 
 
+# base_url = "https://maps.googleapis.com"
+base_url = "https://maps.gomaps.pro"
+
 # ----------------------------
 # API and Place Details Functions
 # ----------------------------
 def geocode_place(place_name):
     api_key = st.secrets["GOOGLE_MAPS_API_KEY"]
-    geocode_url = "https://maps.gomaps.pro/maps/api/geocode/json"
+    geocode_url = f"{base_url}/maps/api/geocode/json"
     params = {"address": place_name, "key": api_key}
     response = requests.get(geocode_url, params=params)
     data = response.json()
@@ -23,7 +26,7 @@ def get_basic_places(location, radius, place_types):
     api_key = st.secrets["GOOGLE_MAPS_API_KEY"]
     all_places = []
     for place_type in place_types:
-        url = "https://maps.gomaps.pro/maps/api/place/nearbysearch/json"
+        url = f"{base_url}/maps/api/place/nearbysearch/json"
         params = {
             "location": f"{location['lat']},{location['lng']}",
             "radius": radius,
@@ -52,7 +55,7 @@ def get_basic_places(location, radius, place_types):
 
 def get_detailed_place(place_id):
     api_key = st.secrets["GOOGLE_MAPS_API_KEY"]
-    url = "https://maps.gomaps.pro/maps/api/place/details/json"
+    url = f"{base_url}/maps/api/place/details/json"
     params = {
         "place_id": place_id,
         "fields": "name,formatted_address,opening_hours,rating,user_ratings_total,types,geometry",
