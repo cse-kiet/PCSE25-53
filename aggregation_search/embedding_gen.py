@@ -78,11 +78,14 @@ faiss.normalize_L2(aggregated_embeddings)  # ensure normalization for cosine sim
 index_place = faiss.IndexFlatIP(aggregated_embeddings.shape[1])
 index_place.add(aggregated_embeddings)
 
+output_data_dir = "data"
+os.makedirs(output_data_dir, exist_ok=True)
+
 # Save the aggregated index and mappings.
-faiss.write_index(index_place, "aggregated_clip.index")
-with open('place_mapping.json', 'w') as f:
+faiss.write_index(index_place, os.path.join(output_data_dir, "aggregated_clip.index"))
+with open(os.path.join(output_data_dir, 'place_mapping.json'), 'w') as f:
     json.dump(place_to_rep_image, f)
-with open('places_order.json', 'w') as f:
+with open(os.path.join(output_data_dir, 'places_order.json'), 'w') as f:
     json.dump(places_order, f)
 
 print(f"Aggregated index created with {index_place.ntotal} entries.")
